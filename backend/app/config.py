@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +27,27 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000"]
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @field_validator("database_url")
+    @classmethod
+    def ensure_asyncpg_scheme(cls, v: str) -> str:
+        """Normalise the DATABASE_URL to use the asyncpg driver.
+
+        Railway and other platforms provide a plain 'postgresql://' or
+        'postgres://' URL. SQLAlchemy needs 'postgresql+asyncpg://' for
+        the async engine, so we rewrite the scheme on load.
+
+        Args:
+            v (str): Raw DATABASE_URL value.
+
+        Returns:
+            str: URL with the correct asyncpg scheme.
+        """
+        if v.startswith("postgres://"):
+            return v.replace("postgres://", "postgresql+asyncpg://", 1)
+        if v.startswith("postgresql://"):
+            return v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
 
 
 settings = Settings()
