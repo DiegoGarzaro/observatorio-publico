@@ -15,8 +15,9 @@ COPY . .
 EXPOSE 8000
 
 # Call uvicorn directly from the venv — avoids uv re-syncing dependencies at boot.
-CMD ["/app/.venv/bin/uvicorn", "app.main:app", \
-     "--host", "0.0.0.0", \
-     "--port", "8000", \
-     "--workers", "2", \
-     "--no-access-log"]
+CMD ["/bin/sh", "-c", \
+     "/app/.venv/bin/uvicorn app.main:app \
+      --host 0.0.0.0 \
+      --port ${PORT:-8000} \
+      --workers 2 \
+      --no-access-log"]
