@@ -28,6 +28,32 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
+    @field_validator("cors_origins", mode="before")
+    @classmethod
+    def parse_cors_origins(cls, v: object) -> list[str]:
+        """Accept a plain comma-separated string or a JSON array.
+
+        Railway doesn't handle JSON arrays in env vars well, so we also
+        support a simple comma-separated format:
+            CORS_ORIGINS=https://foo.vercel.app,https://bar.com
+
+        Args:
+            v (object): Raw value from the environment.
+
+        Returns:
+            list[str]: Parsed list of allowed origins.
+        """
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            v = v.strip()
+            if v.startswith("["):
+                import json
+
+                return json.loads(v)
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v  # type: ignore[return-value]
+
     @field_validator("database_url")
     @classmethod
     def ensure_asyncpg_scheme(cls, v: str) -> str:
