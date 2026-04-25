@@ -36,3 +36,6 @@ npm-debug.log*
 
 # Misc
 *.log
+
+PRD.md
+TASKS.md
