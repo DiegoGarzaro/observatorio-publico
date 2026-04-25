@@ -12,12 +12,9 @@ RUN uv sync --frozen --no-dev --no-cache
 # Copy application code
 COPY . .
 
+RUN chmod +x entrypoint.sh
+
 EXPOSE 8000
 
 # Call uvicorn directly from the venv — avoids uv re-syncing dependencies at boot.
-CMD ["/bin/sh", "-c", \
-     "/app/.venv/bin/uvicorn app.main:app \
-      --host 0.0.0.0 \
-      --port ${PORT:-8000} \
-      --workers 2 \
-      --no-access-log"]
+CMD ["./entrypoint.sh"]

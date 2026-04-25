@@ -53,8 +53,7 @@ class VoteRepository:
         total = count_result.scalar_one()
 
         result = await self._session.execute(
-            base_query
-            .options(selectinload(Vote.proposition))
+            base_query.options(selectinload(Vote.proposition))
             .order_by(Vote.session_date.desc())
             .offset((page - 1) * page_size)
             .limit(page_size)
@@ -77,9 +76,7 @@ class VoteRepository:
         if year:
             base_filter.append(extract("year", Vote.session_date) == year)
 
-        total_result = await self._session.execute(
-            select(func.count()).where(*base_filter)
-        )
+        total_result = await self._session.execute(select(func.count()).where(*base_filter))
         total = total_result.scalar_one()
 
         by_direction_result = await self._session.execute(
@@ -89,8 +86,7 @@ class VoteRepository:
             .order_by(func.count().desc())
         )
         by_direction = [
-            {"direction": row.direction, "count": row.count}
-            for row in by_direction_result
+            {"direction": row.direction, "count": row.count} for row in by_direction_result
         ]
 
         absent = sum(r["count"] for r in by_direction if r["direction"] in ("Ausente", "Artigo 17"))

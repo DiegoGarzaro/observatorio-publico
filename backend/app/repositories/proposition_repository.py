@@ -87,9 +87,9 @@ class PropositionRepository:
         from sqlalchemy import tuple_ as sa_tuple
 
         result = await self._session.execute(
-            select(Proposition.prop_type, Proposition.number, Proposition.year, Proposition.id).where(
-                sa_tuple(Proposition.prop_type, Proposition.number, Proposition.year).in_(refs)
-            )
+            select(
+                Proposition.prop_type, Proposition.number, Proposition.year, Proposition.id
+            ).where(sa_tuple(Proposition.prop_type, Proposition.number, Proposition.year).in_(refs))
         )
         return {(row.prop_type, row.number, row.year): row.id for row in result}
 

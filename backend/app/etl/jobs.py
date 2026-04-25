@@ -23,9 +23,9 @@ _PROP_REF_RE = re.compile(r"^([A-ZÁÇÕ]+)\s+(\d+)/(\d{4})$")
 logger = logging.getLogger(__name__)
 
 CURRENT_LEGISLATURE = 57
-_CONCURRENT_VOTACOES = 8   # max concurrent API calls when fetching votes per votação
-_CONCURRENT_PROPS = 8      # max concurrent API calls when fetching proposition details
-_ENRICH_BATCH = 200        # propositions fetched per enrichment round
+_CONCURRENT_VOTACOES = 8  # max concurrent API calls when fetching votes per votação
+_CONCURRENT_PROPS = 8  # max concurrent API calls when fetching proposition details
+_ENRICH_BATCH = 200  # propositions fetched per enrichment round
 
 
 @dataclass
@@ -154,9 +154,7 @@ async def enrich_deputy_details(
 
         except Exception as exc:
             result.errors += 1
-            logger.warning(
-                "Failed to enrich deputy %d: %s", politician.external_id, exc
-            )
+            logger.warning("Failed to enrich deputy %d: %s", politician.external_id, exc)
 
     await session.commit()
     result.log(f"Done — {result.processed} enriched, {result.errors} errors")
@@ -208,18 +206,20 @@ async def ingest_expenses(
                 if float(raw_value) <= 0:
                     continue
 
-                batch.append({
-                    "external_id": external_id,
-                    "politician_id": politician.id,
-                    "year": expense.get("ano"),
-                    "month": expense.get("mes"),
-                    "category": expense.get("tipoDespesa", "Outros"),
-                    "description": expense.get("descricao"),
-                    "supplier_name": expense.get("nomeFornecedor"),
-                    "supplier_document": expense.get("cnpjCpfFornecedor"),
-                    "value": raw_value,
-                    "doc_url": expense.get("urlDocumento"),
-                })
+                batch.append(
+                    {
+                        "external_id": external_id,
+                        "politician_id": politician.id,
+                        "year": expense.get("ano"),
+                        "month": expense.get("mes"),
+                        "category": expense.get("tipoDespesa", "Outros"),
+                        "description": expense.get("descricao"),
+                        "supplier_name": expense.get("nomeFornecedor"),
+                        "supplier_document": expense.get("cnpjCpfFornecedor"),
+                        "value": raw_value,
+                        "doc_url": expense.get("urlDocumento"),
+                    }
+                )
 
             async with session.begin_nested():
                 count = await expense_repo.upsert_bulk(batch)
@@ -272,21 +272,21 @@ async def ingest_propositions(
         batch: list[dict] = []
 
         try:
-            async for prop in client.get_propositions_by_author(
-                politician.external_id, year=year
-            ):
-                batch.append({
-                    "external_id": prop["id"],
-                    "author_id": politician.id,
-                    "prop_type": prop.get("siglaTipo", ""),
-                    "number": prop.get("numero", 0),
-                    "year": prop.get("ano", 0),
-                    "title": prop.get("ementa"),
-                    "status": (
-                        (prop.get("statusProposicao") or {}).get("descricaoSituacao")
-                        or (prop.get("statusProposicao") or {}).get("descricaoTramitacao")
-                    ),
-                })
+            async for prop in client.get_propositions_by_author(politician.external_id, year=year):
+                batch.append(
+                    {
+                        "external_id": prop["id"],
+                        "author_id": politician.id,
+                        "prop_type": prop.get("siglaTipo", ""),
+                        "number": prop.get("numero", 0),
+                        "year": prop.get("ano", 0),
+                        "title": prop.get("ementa"),
+                        "status": (
+                            (prop.get("statusProposicao") or {}).get("descricaoSituacao")
+                            or (prop.get("statusProposicao") or {}).get("descricaoTramitacao")
+                        ),
+                    }
+                )
 
             # Deduplicate by external_id — the API occasionally returns the
             # same proposition twice (e.g. co-authorship or pagination overlap).
@@ -416,15 +416,17 @@ async def ingest_votes(
             if not internal_id:
                 continue  # deputy not in our DB yet — skip
 
-            batch.append({
-                "external_votacao_id": votacao_id,
-                "politician_id": internal_id,
-                "proposition_id": None,  # resolved in bulk after fetch
-                "direction": raw.get("tipoVoto", "Desconhecido"),
-                "session_date": session_date_raw,
-                "description": description,
-                "proposition_ref": proposition_ref,
-            })
+            batch.append(
+                {
+                    "external_votacao_id": votacao_id,
+                    "politician_id": internal_id,
+                    "proposition_id": None,  # resolved in bulk after fetch
+                    "direction": raw.get("tipoVoto", "Desconhecido"),
+                    "session_date": session_date_raw,
+                    "description": description,
+                    "proposition_ref": proposition_ref,
+                }
+            )
 
         return batch, 0
 
@@ -493,9 +495,7 @@ async def ingest_votes(
 
         except Exception as exc:
             result.errors += 1
-            logger.warning(
-                "Failed to process chunk %s → %s: %s", chunk_start, chunk_end, exc
-            )
+            logger.warning("Failed to process chunk %s → %s: %s", chunk_start, chunk_end, exc)
 
     result.log(f"Done — {result.processed} votes, {result.errors} errors")
     return result
@@ -538,9 +538,8 @@ async def enrich_propositions_status(
             try:
                 detail = await client.get_proposition_detail(prop.external_id)
                 status_obj = detail.get("statusProposicao") or {}
-                status = (
-                    status_obj.get("descricaoSituacao")
-                    or status_obj.get("descricaoTramitacao")
+                status = status_obj.get("descricaoSituacao") or status_obj.get(
+                    "descricaoTramitacao"
                 )
                 return {"external_id": prop.external_id, "status": status}
             except Exception as exc:
@@ -585,9 +584,7 @@ async def enrich_propositions_status(
         if len(propositions) < batch_size:
             break
 
-    result.log(
-        f"Done — {result.processed} statuses updated, {result.errors} errors"
-    )
+    result.log(f"Done — {result.processed} statuses updated, {result.errors} errors")
     return result
 
 
@@ -619,9 +616,7 @@ async def ingest_ceaps(
 
     # Build a normalized-name → internal-id lookup for all senators
     senators, _ = await politician_repo.list(role="senador", page=1, page_size=10_000)
-    name_to_id: dict[str, int] = {
-        normalize_name(s.name): s.id for s in senators
-    }
+    name_to_id: dict[str, int] = {normalize_name(s.name): s.id for s in senators}
 
     try:
         rows = await client.get_ceaps_csv(year)
@@ -665,18 +660,20 @@ async def ingest_ceaps(
         supplier_name = (row.get("FORNECEDOR") or "").strip() or None
         supplier_doc = (row.get("CNPJ_CPF") or "").strip() or None
 
-        batch.append({
-            "external_id": external_id[:100],
-            "politician_id": politician_id,
-            "year": year,
-            "month": month,
-            "category": (row.get("TIPO_DESPESA") or "Outros").strip()[:255],
-            "description": description[:500] if description else None,
-            "supplier_name": supplier_name[:255] if supplier_name else None,
-            "supplier_document": supplier_doc[:20] if supplier_doc else None,
-            "value": value,
-            "doc_url": None,
-        })
+        batch.append(
+            {
+                "external_id": external_id[:100],
+                "politician_id": politician_id,
+                "year": year,
+                "month": month,
+                "category": (row.get("TIPO_DESPESA") or "Outros").strip()[:255],
+                "description": description[:500] if description else None,
+                "supplier_name": supplier_name[:255] if supplier_name else None,
+                "supplier_document": supplier_doc[:20] if supplier_doc else None,
+                "value": value,
+                "doc_url": None,
+            }
+        )
 
     if unmatched:
         logger.warning(
@@ -705,8 +702,7 @@ async def ingest_ceaps(
         result.processed = total_upserted
 
     result.log(
-        f"Done — {result.processed} expenses upserted, "
-        f"{result.errors} rows unmatched for {year}"
+        f"Done — {result.processed} expenses upserted, {result.errors} rows unmatched for {year}"
     )
     return result
 
@@ -752,6 +748,7 @@ async def ingest_senator_votes(
                 if session_date_str:
                     try:
                         from datetime import date as date_type
+
                         session_date = date_type.fromisoformat(session_date_str)
                     except ValueError:
                         pass
@@ -764,9 +761,7 @@ async def ingest_senator_votes(
                 # the vote record, not nested under VotosParlamentar.
                 # DescricaoVoto is sometimes null — fall back to SiglaDescricaoVoto.
                 direction = (
-                    vote.get("DescricaoVoto")
-                    or vote.get("SiglaDescricaoVoto")
-                    or "Desconhecido"
+                    vote.get("DescricaoVoto") or vote.get("SiglaDescricaoVoto") or "Desconhecido"
                 )
 
                 votacao_id = str(sessao.get("CodigoSessao") or vote.get("CodigoVotacao") or "")
@@ -778,15 +773,17 @@ async def ingest_senator_votes(
                 # Format: senado-{senator_external_id}-{session_id}-{materia_codigo}
                 external_votacao_id = f"senado-{senator.external_id}-{votacao_id}-{materia_codigo}"
 
-                batch.append({
-                    "external_votacao_id": external_votacao_id,
-                    "politician_id": senator.id,
-                    "proposition_id": None,
-                    "direction": direction,
-                    "session_date": session_date,
-                    "description": vote.get("DescricaoVotacao") or None,
-                    "proposition_ref": proposition_ref,
-                })
+                batch.append(
+                    {
+                        "external_votacao_id": external_votacao_id,
+                        "politician_id": senator.id,
+                        "proposition_id": None,
+                        "direction": direction,
+                        "session_date": session_date,
+                        "description": vote.get("DescricaoVotacao") or None,
+                        "proposition_ref": proposition_ref,
+                    }
+                )
 
             if batch:
                 # Deduplicate by external_votacao_id within the batch —
@@ -809,9 +806,7 @@ async def ingest_senator_votes(
                 exc,
             )
 
-    result.log(
-        f"Done — {result.processed} votes, {result.errors} errors (year={ref_year})"
-    )
+    result.log(f"Done — {result.processed} votes, {result.errors} errors (year={ref_year})")
     return result
 
 
@@ -884,7 +879,11 @@ async def ingest_senators(session: AsyncSession, client: SenadoClient) -> JobRes
 
         except Exception as exc:
             result.errors += 1
-            logger.warning("Failed to ingest senator %s: %s", senator.get("IdentificacaoParlamentar", {}).get("CodigoParlamentar"), exc)
+            logger.warning(
+                "Failed to ingest senator %s: %s",
+                senator.get("IdentificacaoParlamentar", {}).get("CodigoParlamentar"),
+                exc,
+            )
 
     await session.commit()
     result.log(f"Done — {result.processed} senators, {result.errors} errors")
@@ -1083,37 +1082,253 @@ async def seed_vice_presidents(session: AsyncSession) -> JobResult:
 # Source: TSE / portais das Assembleias Legislativas.
 _GOVERNORS: list[dict] = [
     # Norte
-    {"external_id": 93000001, "name": "Gladson Cameli",          "party": "PP",            "uf": "AC", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000002, "name": "Wilson Lima",             "party": "União Brasil",   "uf": "AM", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000003, "name": "Clécio Luís",             "party": "Solidariedade", "uf": "AP", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000004, "name": "Helder Barbalho",         "party": "MDB",           "uf": "PA", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000005, "name": "Marcos Rocha",            "party": "União Brasil",   "uf": "RO", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000006, "name": "Arthur Henrique",         "party": "MDB",           "uf": "RR", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000007, "name": "Wanderlei Barbosa",       "party": "Republicanos",  "uf": "TO", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
+    {
+        "external_id": 93000001,
+        "name": "Gladson Cameli",
+        "party": "PP",
+        "uf": "AC",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000002,
+        "name": "Wilson Lima",
+        "party": "União Brasil",
+        "uf": "AM",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000003,
+        "name": "Clécio Luís",
+        "party": "Solidariedade",
+        "uf": "AP",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000004,
+        "name": "Helder Barbalho",
+        "party": "MDB",
+        "uf": "PA",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000005,
+        "name": "Marcos Rocha",
+        "party": "União Brasil",
+        "uf": "RO",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000006,
+        "name": "Arthur Henrique",
+        "party": "MDB",
+        "uf": "RR",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000007,
+        "name": "Wanderlei Barbosa",
+        "party": "Republicanos",
+        "uf": "TO",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
     # Nordeste
-    {"external_id": 93000008, "name": "Paulo Dantas",            "party": "MDB",           "uf": "AL", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000009, "name": "Jerônimo Rodrigues",      "party": "PT",            "uf": "BA", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000010, "name": "Elmano de Freitas",       "party": "PT",            "uf": "CE", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000011, "name": "Carlos Brandão",          "party": "PSB",           "uf": "MA", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000012, "name": "João Azevêdo",            "party": "PSB",           "uf": "PB", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000013, "name": "Raquel Lyra",             "party": "PSDB",          "uf": "PE", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000014, "name": "Rafael Fonteles",         "party": "PT",            "uf": "PI", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000015, "name": "Fátima Bezerra",          "party": "PT",            "uf": "RN", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000016, "name": "Fábio Mitidieri",         "party": "PSD",           "uf": "SE", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
+    {
+        "external_id": 93000008,
+        "name": "Paulo Dantas",
+        "party": "MDB",
+        "uf": "AL",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000009,
+        "name": "Jerônimo Rodrigues",
+        "party": "PT",
+        "uf": "BA",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000010,
+        "name": "Elmano de Freitas",
+        "party": "PT",
+        "uf": "CE",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000011,
+        "name": "Carlos Brandão",
+        "party": "PSB",
+        "uf": "MA",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000012,
+        "name": "João Azevêdo",
+        "party": "PSB",
+        "uf": "PB",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000013,
+        "name": "Raquel Lyra",
+        "party": "PSDB",
+        "uf": "PE",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000014,
+        "name": "Rafael Fonteles",
+        "party": "PT",
+        "uf": "PI",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000015,
+        "name": "Fátima Bezerra",
+        "party": "PT",
+        "uf": "RN",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000016,
+        "name": "Fábio Mitidieri",
+        "party": "PSD",
+        "uf": "SE",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
     # Centro-Oeste
-    {"external_id": 93000017, "name": "Ibaneis Rocha",           "party": "MDB",           "uf": "DF", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000018, "name": "Ronaldo Caiado",          "party": "União Brasil",   "uf": "GO", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000019, "name": "Eduardo Riedel",          "party": "PSDB",          "uf": "MS", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000020, "name": "Mauro Mendes",            "party": "União Brasil",   "uf": "MT", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
+    {
+        "external_id": 93000017,
+        "name": "Ibaneis Rocha",
+        "party": "MDB",
+        "uf": "DF",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000018,
+        "name": "Ronaldo Caiado",
+        "party": "União Brasil",
+        "uf": "GO",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000019,
+        "name": "Eduardo Riedel",
+        "party": "PSDB",
+        "uf": "MS",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000020,
+        "name": "Mauro Mendes",
+        "party": "União Brasil",
+        "uf": "MT",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
     # Sudeste
-    {"external_id": 93000021, "name": "Renato Casagrande",       "party": "PSB",           "uf": "ES", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000022, "name": "Romeu Zema",              "party": "Novo",          "uf": "MG", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000023, "name": "Cláudio Castro",          "party": "PL",            "uf": "RJ", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000024, "name": "Tarcísio de Freitas",     "party": "Republicanos",  "uf": "SP", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
+    {
+        "external_id": 93000021,
+        "name": "Renato Casagrande",
+        "party": "PSB",
+        "uf": "ES",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000022,
+        "name": "Romeu Zema",
+        "party": "Novo",
+        "uf": "MG",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000023,
+        "name": "Cláudio Castro",
+        "party": "PL",
+        "uf": "RJ",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000024,
+        "name": "Tarcísio de Freitas",
+        "party": "Republicanos",
+        "uf": "SP",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
     # Sul
-    {"external_id": 93000025, "name": "Ratinho Junior",          "party": "PSD",           "uf": "PR", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000026, "name": "Eduardo Leite",           "party": "PSDB",          "uf": "RS", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
-    {"external_id": 93000027, "name": "Jorginho Mello",          "party": "PL",            "uf": "SC", "photo_url": None, "mandate_start": 2023, "mandate_end": None},
+    {
+        "external_id": 93000025,
+        "name": "Ratinho Junior",
+        "party": "PSD",
+        "uf": "PR",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000026,
+        "name": "Eduardo Leite",
+        "party": "PSDB",
+        "uf": "RS",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
+    {
+        "external_id": 93000027,
+        "name": "Jorginho Mello",
+        "party": "PL",
+        "uf": "SC",
+        "photo_url": None,
+        "mandate_start": 2023,
+        "mandate_end": None,
+    },
 ]
 
 
@@ -1448,18 +1663,37 @@ async def ingest_card_expenses(
                     record = {
                         "external_id": raw_id,
                         "organ_code": str(orgao_vinculado.get("codigoSIAFI") or organ_code),
-                        "organ_name": (orgao_vinculado.get("nome") or orgao_maximo.get("nome") or "")[:255],
+                        "organ_name": (
+                            orgao_vinculado.get("nome") or orgao_maximo.get("nome") or ""
+                        )[:255],
                         "management_unit_code": str(ugr.get("codigo") or "")[:20] or None,
                         "management_unit_name": (ugr.get("nome") or "")[:255] or None,
                         "holder_name": (portador.get("nome") or "")[:255] or None,
-                        "holder_cpf": (portador.get("cpfFormatado") or portador.get("cpf") or "")[:20] or None,
+                        "holder_cpf": (portador.get("cpfFormatado") or portador.get("cpf") or "")[
+                            :20
+                        ]
+                        or None,
                         "holder_role": (portador.get("cargo") or "")[:255] or None,
                         "card_number": (item.get("numeroCartao") or "")[:30] or None,
                         "transaction_date": transaction_date,
-                        "transaction_year": transaction_date.year if transaction_date else stmt_year,
-                        "transaction_month": transaction_date.month if transaction_date else stmt_month,
-                        "supplier_name": (estabelecimento.get("nome") or estabelecimento.get("razaoSocialReceita") or "")[:255] or None,
-                        "supplier_cnpj": (estabelecimento.get("cnpjFormatado") or estabelecimento.get("cnpj") or "")[:20] or None,
+                        "transaction_year": transaction_date.year
+                        if transaction_date
+                        else stmt_year,
+                        "transaction_month": transaction_date.month
+                        if transaction_date
+                        else stmt_month,
+                        "supplier_name": (
+                            estabelecimento.get("nome")
+                            or estabelecimento.get("razaoSocialReceita")
+                            or ""
+                        )[:255]
+                        or None,
+                        "supplier_cnpj": (
+                            estabelecimento.get("cnpjFormatado")
+                            or estabelecimento.get("cnpj")
+                            or ""
+                        )[:20]
+                        or None,
                         "value": value,
                         "installments": int(item.get("numeroParcelas") or 1),
                         "raw_data": item,
@@ -1470,7 +1704,9 @@ async def ingest_card_expenses(
                 result.errors += 1
                 logger.warning(
                     "[ingest_card_expenses] Failed to fetch %s for organ %s: %s",
-                    period, organ_code, exc,
+                    period,
+                    organ_code,
+                    exc,
                 )
 
     if not batch:
@@ -1493,11 +1729,22 @@ async def ingest_card_expenses(
             set_={
                 col: stmt.excluded[col]
                 for col in (
-                    "organ_code", "organ_name", "management_unit_code",
-                    "management_unit_name", "holder_name", "holder_cpf",
-                    "holder_role", "card_number", "transaction_date",
-                    "transaction_year", "transaction_month", "supplier_name",
-                    "supplier_cnpj", "value", "installments", "raw_data",
+                    "organ_code",
+                    "organ_name",
+                    "management_unit_code",
+                    "management_unit_name",
+                    "holder_name",
+                    "holder_cpf",
+                    "holder_role",
+                    "card_number",
+                    "transaction_date",
+                    "transaction_year",
+                    "transaction_month",
+                    "supplier_name",
+                    "supplier_cnpj",
+                    "value",
+                    "installments",
+                    "raw_data",
                 )
             },
         )
@@ -1507,8 +1754,7 @@ async def ingest_card_expenses(
         result.processed += len(chunk)
 
     result.log(
-        f"Done — {result.processed} transactions upserted for "
-        f"organ={organ_code} year={ref_year}"
+        f"Done — {result.processed} transactions upserted for organ={organ_code} year={ref_year}"
     )
     return result
 
@@ -1539,11 +1785,13 @@ async def ingest_amendments(
     from app.etl.transparencia_client import TransparenciaClient, parse_br_decimal
     from app.models.amendment import Amendment
 
-    _PIX_TYPES = frozenset({
-        "Emenda Pix",
-        "Emenda de Relator",
-        "Emenda RP 9",
-    })
+    _PIX_TYPES = frozenset(
+        {
+            "Emenda Pix",
+            "Emenda de Relator",
+            "Emenda RP 9",
+        }
+    )
 
     def _normalise(name: str) -> str:
         """Normalise a name for fuzzy matching: uppercase, no accents, collapsed spaces."""
@@ -1557,11 +1805,7 @@ async def ingest_amendments(
     # Build a normalised name → politician_id lookup for matching
     politician_repo = PoliticianRepository(session)
     all_politicians, _ = await politician_repo.list(page=1, page_size=100_000)
-    name_to_id: dict[str, int] = {
-        _normalise(p.name): p.id
-        for p in all_politicians
-        if p.name
-    }
+    name_to_id: dict[str, int] = {_normalise(p.name): p.id for p in all_politicians if p.name}
 
     try:
         client = TransparenciaClient()
@@ -1636,11 +1880,23 @@ async def ingest_amendments(
             set_={
                 col: stmt.excluded[col]
                 for col in (
-                    "year", "amendment_type", "author", "author_name",
-                    "politician_id", "amendment_number", "locality",
-                    "function_name", "subfunction_name", "committed_value",
-                    "liquidated_value", "paid_value", "remainder_inscribed",
-                    "remainder_canceled", "remainder_paid", "is_pix", "raw_data",
+                    "year",
+                    "amendment_type",
+                    "author",
+                    "author_name",
+                    "politician_id",
+                    "amendment_number",
+                    "locality",
+                    "function_name",
+                    "subfunction_name",
+                    "committed_value",
+                    "liquidated_value",
+                    "paid_value",
+                    "remainder_inscribed",
+                    "remainder_canceled",
+                    "remainder_paid",
+                    "is_pix",
+                    "raw_data",
                 )
             },
         )
@@ -1802,7 +2058,10 @@ async def ingest_tse_municipais(session: AsyncSession) -> JobResult:
                             result.errors += 1
                             logger.warning(
                                 "[ingest_tse_municipais] Upsert failed for %s (%s/%s): %s",
-                                nome, municipio, uf_row, exc,
+                                nome,
+                                municipio,
+                                uf_row,
+                                exc,
                             )
 
             await session.commit()
@@ -1812,7 +2071,5 @@ async def ingest_tse_municipais(session: AsyncSession) -> JobResult:
             result.errors += 1
             logger.warning("[ingest_tse_municipais] Failed to process zip: %s", exc)
 
-    result.log(
-        f"Done — {result.processed} politicians imported, {result.errors} errors"
-    )
+    result.log(f"Done — {result.processed} politicians imported, {result.errors} errors")
     return result

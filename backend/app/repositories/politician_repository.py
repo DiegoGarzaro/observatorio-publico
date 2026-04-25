@@ -86,9 +86,7 @@ class PoliticianRepository:
         total = count_result.scalar_one()
 
         result = await self._session.execute(
-            base_query.order_by(Politician.name)
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            base_query.order_by(Politician.name).offset((page - 1) * page_size).limit(page_size)
         )
         return list(result.scalars()), total
 

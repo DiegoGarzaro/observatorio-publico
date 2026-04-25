@@ -248,7 +248,6 @@ async def run(
         logger.info("ETL started at %s", started_at.isoformat())
 
     async with CamaraClient() as camara_client, AsyncSessionLocal() as session:
-
         if not politician_ids:
             logger.info("==> Job: ingest_deputies")
             r1 = await ingest_deputies(session, camara_client)
@@ -292,7 +291,9 @@ async def run(
             logger.info("==> Job: ingest_tse_municipais SKIPPED (scoped run)")
 
         logger.info("==> Job: ingest_propositions (year=%s)", year or "all")
-        r4 = await ingest_propositions(session, camara_client, year=year, politician_ids=politician_ids)
+        r4 = await ingest_propositions(
+            session, camara_client, year=year, politician_ids=politician_ids
+        )
         logger.info("    %s", r4.messages[-1] if r4.messages else "")
 
         if not skip_votes:
@@ -316,7 +317,9 @@ async def run(
             r6 = await enrich_propositions_status(session, camara_client)
             logger.info("    %s", r6.messages[-1] if r6.messages else "")
         else:
-            logger.info("==> Job: enrich_propositions_status SKIPPED (use --enrich-propositions to run)")
+            logger.info(
+                "==> Job: enrich_propositions_status SKIPPED (use --enrich-propositions to run)"
+            )
 
     if not skip_senators and not politician_ids:
         async with SenadoClient() as senado_client, AsyncSessionLocal() as session:
@@ -394,10 +397,12 @@ if __name__ == "__main__":
             sys.exit(1)
         asyncio.run(run_only(only_arg, year=year_arg, role=role_arg))
     else:
-        asyncio.run(run(
-            year=year_arg,
-            skip_votes=skip_votes_arg,
-            skip_senators=skip_senators_arg,
-            enrich_propositions=enrich_propositions_arg,
-            politician_ids=politician_ids_arg,
-        ))
+        asyncio.run(
+            run(
+                year=year_arg,
+                skip_votes=skip_votes_arg,
+                skip_senators=skip_senators_arg,
+                enrich_propositions=enrich_propositions_arg,
+                politician_ids=politician_ids_arg,
+            )
+        )

@@ -73,8 +73,7 @@ class SenadoClient:
         """
         data = await self._get("/senador/lista/atual.json")
         parlamentares = (
-            data
-            .get("ListaParlamentarEmExercicio", {})
+            data.get("ListaParlamentarEmExercicio", {})
             .get("Parlamentares", {})
             .get("Parlamentar", [])
         )
@@ -93,11 +92,7 @@ class SenadoClient:
             dict: Senator detail from 'Parlamentar' key.
         """
         data = await self._get(f"/senador/{senator_id}.json")
-        return (
-            data
-            .get("DetalheParlamentar", {})
-            .get("Parlamentar", {})
-        )
+        return data.get("DetalheParlamentar", {}).get("Parlamentar", {})
 
     async def get_ceaps_csv(self, year: int) -> list[dict]:
         """Download and parse the CEAPS expense CSV for a given year.
@@ -145,8 +140,7 @@ class SenadoClient:
             return []
 
         votacoes_raw = (
-            data
-            .get("VotacaoParlamentar", {})
+            data.get("VotacaoParlamentar", {})
             .get("Parlamentar", {})
             .get("Votacoes", {})
             .get("Votacao", [])

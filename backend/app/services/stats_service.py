@@ -8,9 +8,7 @@ class StatsService:
     def __init__(self, expense_repository: ExpenseRepository) -> None:
         self._expenses = expense_repository
 
-    async def get_global_expense_summary(
-        self, *, year: int | None = None
-    ) -> GlobalExpenseSummary:
+    async def get_global_expense_summary(self, *, year: int | None = None) -> GlobalExpenseSummary:
         """Return aggregated CEAP expense summary across all politicians.
 
         Args:

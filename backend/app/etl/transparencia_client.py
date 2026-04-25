@@ -32,16 +32,18 @@ _BACKOFF_BASE = 2.0
 
 # Restricted endpoints — hard limit of 180 req/min regardless of time of day.
 # Source: https://portaldatransparencia.gov.br/api-de-dados
-_RESTRICTED_PATHS: frozenset[str] = frozenset({
-    "/despesas/documentos-por-favorecido",
-    "/bolsa-familia-disponivel-por-cpf-ou-nis",
-    "/bolsa-familia-por-municipio",
-    "/bolsa-familia-sacado-por-nis",
-    "/auxilio-emergencial-beneficiario-por-municipio",
-    "/auxilio-emergencial-por-cpf-ou-nis",
-    "/auxilio-emergencial-por-municipio",
-    "/seguro-defeso-codigo",
-})
+_RESTRICTED_PATHS: frozenset[str] = frozenset(
+    {
+        "/despesas/documentos-por-favorecido",
+        "/bolsa-familia-disponivel-por-cpf-ou-nis",
+        "/bolsa-familia-por-municipio",
+        "/bolsa-familia-sacado-por-nis",
+        "/auxilio-emergencial-beneficiario-por-municipio",
+        "/auxilio-emergencial-por-cpf-ou-nis",
+        "/auxilio-emergencial-por-municipio",
+        "/seguro-defeso-codigo",
+    }
+)
 
 
 def _max_rpm(path: str) -> int:
@@ -212,10 +214,14 @@ class TransparenciaClient:
                 response = await self._client.get(path, params=params)
 
                 if response.status_code in _RETRY_STATUSES:
-                    delay = _BACKOFF_BASE ** attempt
+                    delay = _BACKOFF_BASE**attempt
                     logger.warning(
                         "Transient %d from %s (attempt %d/%d) — retrying in %.1fs",
-                        response.status_code, path, attempt + 1, _MAX_RETRIES, delay,
+                        response.status_code,
+                        path,
+                        attempt + 1,
+                        _MAX_RETRIES,
+                        delay,
                     )
                     await asyncio.sleep(delay)
                     last_exc = httpx.HTTPStatusError(
@@ -229,10 +235,13 @@ class TransparenciaClient:
                 return response.json()
 
             except httpx.TimeoutException as exc:
-                delay = _BACKOFF_BASE ** attempt
+                delay = _BACKOFF_BASE**attempt
                 logger.warning(
                     "Timeout on %s (attempt %d/%d) — retrying in %.1fs",
-                    path, attempt + 1, _MAX_RETRIES, delay,
+                    path,
+                    attempt + 1,
+                    _MAX_RETRIES,
+                    delay,
                 )
                 await asyncio.sleep(delay)
                 last_exc = exc
@@ -289,7 +298,10 @@ class TransparenciaClient:
             page += 1
             logger.debug(
                 "Paginating %s — page %d (effective_size=%d, rpm_limit=%d)",
-                path, page, effective_size, _max_rpm(path),
+                path,
+                page,
+                effective_size,
+                _max_rpm(path),
             )
 
     # ─── Domain-specific helpers ──────────────────────────────────────────────

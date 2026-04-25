@@ -1,4 +1,3 @@
-
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -56,9 +55,7 @@ class ExpenseRepository:
         )
         return list(result.scalars()), total
 
-    async def get_summary(
-        self, politician_id: int, *, year: int | None = None
-    ) -> dict:
+    async def get_summary(self, politician_id: int, *, year: int | None = None) -> dict:
         """Return expense totals grouped by category and month.
 
         Args:
@@ -83,10 +80,7 @@ class ExpenseRepository:
             .group_by(Expense.category)
             .order_by(func.sum(Expense.value).desc())
         )
-        by_category = [
-            {"category": row.category, "total": row.total}
-            for row in by_category_result
-        ]
+        by_category = [{"category": row.category, "total": row.total} for row in by_category_result]
 
         by_month_result = await self._session.execute(
             select(Expense.year, Expense.month, func.sum(Expense.value).label("total"))
@@ -95,8 +89,7 @@ class ExpenseRepository:
             .order_by(Expense.year, Expense.month)
         )
         by_month = [
-            {"year": row.year, "month": row.month, "total": row.total}
-            for row in by_month_result
+            {"year": row.year, "month": row.month, "total": row.total} for row in by_month_result
         ]
 
         return {"total": total, "by_category": by_category, "by_month": by_month}
@@ -130,10 +123,7 @@ class ExpenseRepository:
             .group_by(Expense.category)
             .order_by(func.sum(Expense.value).desc())
         )
-        by_category = [
-            {"category": row.category, "total": row.total}
-            for row in by_category_result
-        ]
+        by_category = [{"category": row.category, "total": row.total} for row in by_category_result]
 
         by_month_result = await self._session.execute(
             select(Expense.year, Expense.month, func.sum(Expense.value).label("total"))
@@ -142,8 +132,7 @@ class ExpenseRepository:
             .order_by(Expense.year, Expense.month)
         )
         by_month = [
-            {"year": row.year, "month": row.month, "total": row.total}
-            for row in by_month_result
+            {"year": row.year, "month": row.month, "total": row.total} for row in by_month_result
         ]
 
         return {
@@ -166,9 +155,7 @@ class ExpenseRepository:
             return 0
 
         stmt = (
-            insert(Expense)
-            .values(records)
-            .on_conflict_do_nothing(index_elements=["external_id"])
+            insert(Expense).values(records).on_conflict_do_nothing(index_elements=["external_id"])
         )
         await self._session.execute(stmt)
         await self._session.flush()

@@ -43,7 +43,9 @@ async def compare_politicians(
     try:
         politician_ids = [int(i.strip()) for i in ids.split(",") if i.strip()]
     except ValueError:
-        raise HTTPException(status_code=400, detail="ids must be comma-separated integers") from None
+        raise HTTPException(
+            status_code=400, detail="ids must be comma-separated integers"
+        ) from None
 
     if len(politician_ids) < 2 or len(politician_ids) > 4:
         raise HTTPException(

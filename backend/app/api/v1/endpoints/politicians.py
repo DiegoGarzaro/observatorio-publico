@@ -50,7 +50,9 @@ async def list_politicians(
     name: str | None = Query(None, description="Partial name search"),
     party: str | None = Query(None, description="Party abbreviation (e.g. PT)"),
     uf: str | None = Query(None, description="State abbreviation (e.g. SP)"),
-    municipality: str | None = Query(None, description="Partial municipality name (e.g. São Paulo)"),
+    municipality: str | None = Query(
+        None, description="Partial municipality name (e.g. São Paulo)"
+    ),
     legislature: int | None = Query(None, description="Legislature number"),
     role: str | None = Query(None, description="Role type (deputado_federal, senador)"),
     page: int = Query(1, ge=1),
@@ -162,4 +164,6 @@ async def get_politician_news(
         politician_id=politician_id,
         politician_name=politician.name,
     )
-    return NewsResponse(items=items, politician_name=politician.name, cached=cached, cached_at=cached_at)
+    return NewsResponse(
+        items=items, politician_name=politician.name, cached=cached, cached_at=cached_at
+    )

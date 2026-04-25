@@ -21,7 +21,9 @@ class Vote(Base):
 
     __tablename__ = "votes"
     __table_args__ = (
-        UniqueConstraint("external_votacao_id", "politician_id", name="uq_votes_votacao_politician"),
+        UniqueConstraint(
+            "external_votacao_id", "politician_id", name="uq_votes_votacao_politician"
+        ),
     )
 
     id: Mapped[int] = mapped_column(primary_key=True)

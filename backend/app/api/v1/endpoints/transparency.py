@@ -33,7 +33,9 @@ def _amendment_service(session: AsyncSession = Depends(get_session)) -> Amendmen
     ),
 )
 async def list_card_expenses(
-    organ_code: str = Query(PRESIDENCIA, pattern=r"^\d{1,10}$", description="Government organ code (digits only)"),
+    organ_code: str = Query(
+        PRESIDENCIA, pattern=r"^\d{1,10}$", description="Government organ code (digits only)"
+    ),
     year: int | None = Query(None, ge=2000, le=2100),
     month: int | None = Query(None, ge=1, le=12),
     page: int = Query(1, ge=1),
@@ -72,7 +74,9 @@ async def list_card_expenses(
     ),
 )
 async def get_card_expense_summary(
-    organ_code: str = Query(PRESIDENCIA, pattern=r"^\d{1,10}$", description="Government organ code (digits only)"),
+    organ_code: str = Query(
+        PRESIDENCIA, pattern=r"^\d{1,10}$", description="Government organ code (digits only)"
+    ),
     year: int | None = Query(None, ge=2000, le=2100),
     service: CardExpenseService = Depends(_card_expense_service),
 ) -> CardExpenseSummary:
@@ -90,6 +94,7 @@ async def get_card_expense_summary(
 
 
 # ─── Amendments (Emendas Parlamentares) ───────────────────────────────────────
+
 
 @router.get(
     "/amendments",
@@ -109,7 +114,9 @@ async def list_amendments(
     politician_id: int | None = Query(None),
     author_name: str | None = Query(None),
     function_name: str | None = Query(None),
-    is_pix: bool | None = Query(None, description="Filter Emenda Pix (no beneficiary traceability)"),
+    is_pix: bool | None = Query(
+        None, description="Filter Emenda Pix (no beneficiary traceability)"
+    ),
     page: int = Query(1, ge=1),
     page_size: int = Query(50, ge=1, le=200),
     service: AmendmentService = Depends(_amendment_service),
@@ -174,4 +181,6 @@ async def get_amendment_summary(
     Returns:
         AmendmentSummary: Totals, Pix breakdown and breakdowns by type/function/author.
     """
-    return await service.get_summary(year=year, year_from=year_from, year_to=year_to, politician_id=politician_id)
+    return await service.get_summary(
+        year=year, year_from=year_from, year_to=year_to, politician_id=politician_id
+    )

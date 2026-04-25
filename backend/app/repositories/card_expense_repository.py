@@ -67,9 +67,7 @@ class CardExpenseRepository:
         Returns:
             Decimal: Sum of all transaction values.
         """
-        stmt = select(func.sum(CardExpense.value)).where(
-            CardExpense.organ_code == organ_code
-        )
+        stmt = select(func.sum(CardExpense.value)).where(CardExpense.organ_code == organ_code)
         if year:
             stmt = stmt.where(CardExpense.transaction_year == year)
         result = await self._session.execute(stmt)

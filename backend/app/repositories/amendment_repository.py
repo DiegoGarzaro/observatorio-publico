@@ -171,14 +171,16 @@ class AmendmentRepository:
         Returns:
             list[AmendmentTypeTotal]: Breakdown by type, ordered by committed desc.
         """
-        stmt = select(
-            Amendment.amendment_type,
-            Amendment.is_pix,
-            func.sum(Amendment.committed_value).label("committed"),
-            func.sum(Amendment.paid_value).label("paid"),
-            func.count().label("cnt"),
-        ).group_by(Amendment.amendment_type, Amendment.is_pix).order_by(
-            func.sum(Amendment.committed_value).desc()
+        stmt = (
+            select(
+                Amendment.amendment_type,
+                Amendment.is_pix,
+                func.sum(Amendment.committed_value).label("committed"),
+                func.sum(Amendment.paid_value).label("paid"),
+                func.count().label("cnt"),
+            )
+            .group_by(Amendment.amendment_type, Amendment.is_pix)
+            .order_by(func.sum(Amendment.committed_value).desc())
         )
         if year:
             stmt = stmt.where(Amendment.year == year)
@@ -219,13 +221,15 @@ class AmendmentRepository:
         Returns:
             list[AmendmentFunctionTotal]: Breakdown by function, ordered by committed desc.
         """
-        stmt = select(
-            Amendment.function_name,
-            func.sum(Amendment.committed_value).label("committed"),
-            func.sum(Amendment.paid_value).label("paid"),
-            func.count().label("cnt"),
-        ).group_by(Amendment.function_name).order_by(
-            func.sum(Amendment.committed_value).desc()
+        stmt = (
+            select(
+                Amendment.function_name,
+                func.sum(Amendment.committed_value).label("committed"),
+                func.sum(Amendment.paid_value).label("paid"),
+                func.count().label("cnt"),
+            )
+            .group_by(Amendment.function_name)
+            .order_by(func.sum(Amendment.committed_value).desc())
         )
         if year:
             stmt = stmt.where(Amendment.year == year)
@@ -258,15 +262,18 @@ class AmendmentRepository:
         Returns:
             list[AmendmentAuthorTotal]: Authors sorted by committed desc.
         """
-        stmt = select(
-            Amendment.author_name,
-            Amendment.politician_id,
-            func.sum(Amendment.committed_value).label("committed"),
-            func.sum(Amendment.paid_value).label("paid"),
-            func.count().label("cnt"),
-        ).group_by(Amendment.author_name, Amendment.politician_id).order_by(
-            func.sum(Amendment.committed_value).desc()
-        ).limit(limit)
+        stmt = (
+            select(
+                Amendment.author_name,
+                Amendment.politician_id,
+                func.sum(Amendment.committed_value).label("committed"),
+                func.sum(Amendment.paid_value).label("paid"),
+                func.count().label("cnt"),
+            )
+            .group_by(Amendment.author_name, Amendment.politician_id)
+            .order_by(func.sum(Amendment.committed_value).desc())
+            .limit(limit)
+        )
         if year:
             stmt = stmt.where(Amendment.year == year)
         rows = (await self._session.execute(stmt)).all()

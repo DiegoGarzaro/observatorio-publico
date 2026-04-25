@@ -1,11 +1,13 @@
 from app.repositories.amendment_repository import AmendmentRepository
 from app.schemas.amendment import AmendmentItem, AmendmentSummary, PaginatedAmendments
 
-_PIX_TYPES: frozenset[str] = frozenset({
-    "Emenda Pix",
-    "Emenda de Relator",   # historical — declared unconstitutional 2022
-    "Emenda RP 9",
-})
+_PIX_TYPES: frozenset[str] = frozenset(
+    {
+        "Emenda Pix",
+        "Emenda de Relator",  # historical — declared unconstitutional 2022
+        "Emenda RP 9",
+    }
+)
 
 
 class AmendmentService:
@@ -87,10 +89,18 @@ class AmendmentService:
         Returns:
             AmendmentSummary: Totals, Pix breakdown, by-type, by-function and top authors.
         """
-        committed, paid, count = await self._repo.totals(year=year, year_from=year_from, year_to=year_to, politician_id=politician_id)
-        pix_committed, pix_count = await self._repo.pix_totals(year=year, year_from=year_from, year_to=year_to, politician_id=politician_id)
-        by_type = await self._repo.by_type(year=year, year_from=year_from, year_to=year_to, politician_id=politician_id)
-        by_function = await self._repo.by_function(year=year, year_from=year_from, year_to=year_to, politician_id=politician_id)
+        committed, paid, count = await self._repo.totals(
+            year=year, year_from=year_from, year_to=year_to, politician_id=politician_id
+        )
+        pix_committed, pix_count = await self._repo.pix_totals(
+            year=year, year_from=year_from, year_to=year_to, politician_id=politician_id
+        )
+        by_type = await self._repo.by_type(
+            year=year, year_from=year_from, year_to=year_to, politician_id=politician_id
+        )
+        by_function = await self._repo.by_function(
+            year=year, year_from=year_from, year_to=year_to, politician_id=politician_id
+        )
         top_authors = await self._repo.top_authors(year=year)
 
         return AmendmentSummary(

@@ -86,9 +86,7 @@ class CamaraClient:
                 last_exc = exc
         raise last_exc  # type: ignore[misc]
 
-    async def paginate(
-        self, path: str, params: dict | None = None
-    ) -> AsyncGenerator[dict, None]:
+    async def paginate(self, path: str, params: dict | None = None) -> AsyncGenerator[dict, None]:
         """Iterate through all pages of a paginated endpoint.
 
         Args:
@@ -181,9 +179,7 @@ class CamaraClient:
         async for item in self.paginate("/proposicoes", params):
             yield item
 
-    async def get_votacoes(
-        self, *, date_start: str, date_end: str
-    ) -> AsyncGenerator[dict, None]:
+    async def get_votacoes(self, *, date_start: str, date_end: str) -> AsyncGenerator[dict, None]:
         """Iterate over all plenary vote sessions in a date range.
 
         Args:

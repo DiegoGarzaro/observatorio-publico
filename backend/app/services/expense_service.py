@@ -70,9 +70,7 @@ class ExpenseService:
             page_size=page_size,
         )
 
-    async def get_summary(
-        self, politician_id: int, *, year: int | None = None
-    ) -> ExpenseSummary:
+    async def get_summary(self, politician_id: int, *, year: int | None = None) -> ExpenseSummary:
         """Return aggregated expense summary for a politician.
 
         Args:

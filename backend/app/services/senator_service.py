@@ -103,9 +103,7 @@ class SenatorService:
         gender: str | None = bio.get("SexoParlamentar") or None
 
         # ── Committees (active only) ──────────────────────────────────────────
-        committees_raw = _as_list(
-            (raw.get("MembroComissoes") or {}).get("Comissao")
-        )
+        committees_raw = _as_list((raw.get("MembroComissoes") or {}).get("Comissao"))
         committees: list[SenatorCommittee] = []
         for c in committees_raw:
             if not isinstance(c, dict):
@@ -122,9 +120,7 @@ class SenatorService:
             )
 
         # ── Mandate history ───────────────────────────────────────────────────
-        mandates_raw = _as_list(
-            (raw.get("Mandatos") or {}).get("Mandato")
-        )
+        mandates_raw = _as_list((raw.get("Mandatos") or {}).get("Mandato"))
         ident = raw.get("IdentificacaoParlamentar", {}) or {}
         current_party: str | None = ident.get("SiglaPartidoParlamentar") or None
 

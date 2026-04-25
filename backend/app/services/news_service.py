@@ -22,11 +22,8 @@ from app.schemas.news import NewsItem
 
 logger = logging.getLogger(__name__)
 
-_GOOGLE_NEWS_RSS = (
-    "https://news.google.com/rss/search"
-    "?q={query}&hl=pt-BR&gl=BR&ceid=BR:pt-419"
-)
-_CACHE_TTL = 6 * 3600   # 6 hours — live endpoint
+_GOOGLE_NEWS_RSS = "https://news.google.com/rss/search?q={query}&hl=pt-BR&gl=BR&ceid=BR:pt-419"
+_CACHE_TTL = 6 * 3600  # 6 hours — live endpoint
 _RUNNER_TTL = 8 * 3600  # 8 hours — pre-warmed 3× per day by runner
 _MAX_ITEMS = 5
 _TIMEOUT = httpx.Timeout(15.0)
@@ -129,10 +126,12 @@ class NewsService:
                     # Legacy format (plain list) — migrate to new format in place
                     items = [NewsItem.model_validate(d) for d in payload]
                     now = datetime.utcnow()
-                    new_payload = json.dumps({
-                        "items": [item.model_dump(mode="json") for item in items],
-                        "cached_at": now.isoformat(),
-                    })
+                    new_payload = json.dumps(
+                        {
+                            "items": [item.model_dump(mode="json") for item in items],
+                            "cached_at": now.isoformat(),
+                        }
+                    )
                     ttl_remaining = await self._redis.ttl(key)
                     if ttl_remaining > 0:
                         await self._redis.setex(key, ttl_remaining, new_payload)
@@ -149,10 +148,12 @@ class NewsService:
         now = datetime.utcnow()
 
         if items:
-            payload = json.dumps({
-                "items": [item.model_dump(mode="json") for item in items],
-                "cached_at": now.isoformat(),
-            })
+            payload = json.dumps(
+                {
+                    "items": [item.model_dump(mode="json") for item in items],
+                    "cached_at": now.isoformat(),
+                }
+            )
             await self._redis.setex(key, ttl, payload)
 
         return items, False, now

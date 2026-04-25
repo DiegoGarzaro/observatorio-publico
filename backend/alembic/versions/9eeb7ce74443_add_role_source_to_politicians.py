@@ -5,6 +5,7 @@ Revises: 8f770b8b32cc
 Create Date: 2026-04-14 23:53:35.141147
 
 """
+
 from collections.abc import Sequence
 
 import sqlalchemy as sa
@@ -12,8 +13,8 @@ import sqlalchemy as sa
 from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = '9eeb7ce74443'
-down_revision: str | Sequence[str] | None = '8f770b8b32cc'
+revision: str = "9eeb7ce74443"
+down_revision: str | Sequence[str] | None = "8f770b8b32cc"
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
