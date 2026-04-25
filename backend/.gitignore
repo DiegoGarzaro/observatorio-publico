@@ -13,3 +13,6 @@ wheels/
 .env
 
 .ruff*
+
+# ETL logs
+etl_logs/*.log
