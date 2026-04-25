@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+/* ─── Design Tokens — Observatório Público ─────────────────────────────── */
+@theme inline {
+  /* Backgrounds */
+  --color-bg-base:    #0a0f0a;
+  --color-bg-surface: #111713;
+  --color-bg-raised:  #192018;
+  --color-bg-overlay: #1e2b1e;
+
+  /* Accent */
+  --color-accent:       #9ffe57;
+  --color-accent-muted: #4a7a28;
+  --color-accent-glow:  rgba(159, 254, 87, 0.12);
+
+  /* Text */
+  --color-text-primary:   #e8f5e0;
+  --color-text-secondary: #8a9e80;
+  --color-text-muted:     #4a5e42;
+
+  /* Borders */
+  --color-border-default: rgba(159, 254, 87, 0.1);
+  --color-border-focus:   rgba(159, 254, 87, 0.4);
+
+  /* Semantic */
+  --color-positive: #57fe9f;
+  --color-warning:  #ffd557;
+  --color-danger:   #fe5757;
+
+  /* Typography */
+  --font-sans: var(--font-geist-sans), Inter, sans-serif;
+  --font-mono: var(--font-geist-mono), "JetBrains Mono", monospace;
+
+  /* Border radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ─── Focus ring global ─────────────────────────────────────────────────── */
+*:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--color-accent-glow), 0 0 0 1px var(--color-border-focus);
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-accent-muted);
+  border-radius: 3px;
+}

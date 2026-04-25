@@ -1,0 +1,38 @@
+# Environment files — NEVER commit real credentials
+.env
+.env.local
+.env.*.local
+
+# macOS
+.DS_Store
+
+# Editor config
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+/out/
+npm-debug.log*
+
+# Keys and secrets
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Misc
+*.log

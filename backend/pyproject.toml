@@ -1,0 +1,41 @@
+[project]
+name = "observatorio-publico-backend"
+version = "0.1.0"
+description = "API de transparência política brasileira"
+requires-python = ">=3.12"
+dependencies = [
+    "alembic>=1.16.5",
+    "asyncpg>=0.31.0",
+    "fastapi>=0.128.8",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.11.0",
+    "redis[asyncio]>=7.4.0",
+    "slowapi>=0.1.9",
+    "sqlalchemy[asyncio]>=2.0.49",
+    "uvicorn[standard]>=0.39.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-asyncio>=1.2.0",
+    "ruff>=0.15.10",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501", "B008"]  # B008: Depends() in defaults is the FastAPI standard pattern
+
+[tool.ruff.lint.per-file-ignores]
+"app/models/*.py" = ["F821"]  # F821: forward references are valid in SQLAlchemy relationships
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.alembic]
+script_location = "alembic"
