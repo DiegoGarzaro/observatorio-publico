@@ -1,4 +1,4 @@
-import type { AmendmentSummary, CardExpenseSummary, CompareResponse, Expense, ExpenseSummary, GlobalExpenseSummary, NewsResponse, PaginatedAmendments, PaginatedCardExpenses, PaginatedResponse, Party, Politician, PoliticianListItem, PresenceStats, Proposition, SenatorDetail, Vote } from "@/types"
+import type { AmendmentSummary, CardExpenseSummary, CompareResponse, Expense, ExpenseSummary, GlobalExpenseSummary, NewsResponse, PaginatedAmendments, PaginatedCardExpenses, PaginatedResponse, Party, Politician, PoliticianListItem, PoliticianWithMetrics, PresenceStats, Proposition, SenatorDetail, Vote } from "@/types"
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1"
 
@@ -34,6 +34,15 @@ export const api = {
       page?: number
       page_size?: number
     }) => fetcher<PaginatedResponse<PoliticianListItem>>("/politicians", params),
+
+    listWithMetrics: (params?: {
+      name?: string
+      party?: string
+      uf?: string
+      role?: string
+      page?: number
+      page_size?: number
+    }) => fetcher<PaginatedResponse<PoliticianWithMetrics>>("/politicians/with-metrics", params),
 
     get: (id: number) => fetcher<Politician>(`/politicians/${id}`),
 

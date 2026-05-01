@@ -29,6 +29,14 @@ export interface Politician extends PoliticianListItem {
   mandate_end: number | null
 }
 
+export interface PoliticianWithMetrics extends PoliticianListItem {
+  legislature: number | null
+  total_expenses: number
+  proposition_count: number
+  presence_rate: number
+  total_votes: number
+}
+
 export interface Expense {
   id: number
   category: string

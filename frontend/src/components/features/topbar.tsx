@@ -15,6 +15,12 @@ export function Topbar() {
 
         <nav className="flex items-center gap-1 text-sm">
           <Link
+            href="/eleicoes/2026"
+            className="px-3 py-1.5 rounded text-[#9ffe57] hover:bg-[#9ffe57]/10 transition-colors font-medium text-xs"
+          >
+            Eleições &apos;26
+          </Link>
+          <Link
             href="/custos"
             className="px-3 py-1.5 rounded text-text-secondary hover:text-text-primary hover:bg-bg-raised transition-colors"
           >

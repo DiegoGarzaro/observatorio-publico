@@ -67,9 +67,15 @@ export default function HomePage() {
       <section className="space-y-3">
         <div>
           <h2 className="text-xs font-medium text-text-muted uppercase tracking-wider">Análises</h2>
-          <p className="text-text-secondary text-sm mt-0.5">Quanto custa a máquina pública?</p>
+          <p className="text-text-secondary text-sm mt-0.5">Ferramentas para acompanhar e escolher seus representantes</p>
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
+          <AnalysisCard
+            href="/eleicoes/2026"
+            label="Eleições Gerais 2026"
+            description="Cargos em disputa, histórico dos incumbentes e guia para uma escolha informada — 1º turno em 4 de outubro."
+            tag="Eleições 2026"
+          />
           <AnalysisCard
             href="/custos"
             label="Custos da Máquina Pública"

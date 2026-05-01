@@ -1,4 +1,6 @@
-from sqlalchemy import func, select, update
+from __future__ import annotations
+
+from sqlalchemy import case, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -89,6 +91,118 @@ class PoliticianRepository:
             base_query.order_by(Politician.name).offset((page - 1) * page_size).limit(page_size)
         )
         return list(result.scalars()), total
+
+    async def list_with_metrics(
+        self,
+        *,
+        name: str | None = None,
+        party: str | None = None,
+        uf: str | None = None,
+        role: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> tuple[list[dict], int]:
+        """Return paginated politicians enriched with aggregate metrics.
+
+        Performs four queries: a paginated select for politicians and three
+        scoped aggregates (expenses, propositions, votes) restricted to the
+        page's IDs. Avoids the N+1 pattern of running per-politician
+        repository calls inside a loop.
+
+        Args:
+            name (str | None): Partial name filter (case-insensitive).
+            party (str | None): Party abbreviation filter.
+            uf (str | None): State abbreviation filter.
+            role (str | None): Role filter (e.g. deputado_federal, senador).
+            page (int): Page number (1-based).
+            page_size (int): Number of results per page.
+
+        Returns:
+            tuple[list[dict], int]: List of dicts with politician fields plus
+                total_expenses, proposition_count, total_votes and
+                presence_rate; followed by the total matching count.
+        """
+        from app.models.expense import Expense
+        from app.models.proposition import Proposition
+        from app.models.vote import Vote
+
+        politicians, total = await self.list(
+            name=name,
+            party=party,
+            uf=uf,
+            role=role,
+            page=page,
+            page_size=page_size,
+        )
+
+        if not politicians:
+            return [], total
+
+        ids = [p.id for p in politicians]
+
+        expense_result = await self._session.execute(
+            select(
+                Expense.politician_id,
+                func.coalesce(func.sum(Expense.value), 0).label("total"),
+            )
+            .where(Expense.politician_id.in_(ids))
+            .group_by(Expense.politician_id)
+        )
+        expenses_by_id = {row.politician_id: row.total for row in expense_result}
+
+        proposition_result = await self._session.execute(
+            select(Proposition.author_id, func.count().label("count"))
+            .where(Proposition.author_id.in_(ids))
+            .group_by(Proposition.author_id)
+        )
+        propositions_by_id = {row.author_id: row.count for row in proposition_result}
+
+        vote_result = await self._session.execute(
+            select(
+                Vote.politician_id,
+                func.count().label("total"),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (Vote.direction.in_(("Ausente", "Artigo 17")), 1),
+                            else_=0,
+                        )
+                    ),
+                    0,
+                ).label("absent"),
+            )
+            .where(Vote.politician_id.in_(ids))
+            .group_by(Vote.politician_id)
+        )
+        votes_by_id = {
+            row.politician_id: (row.total, row.absent) for row in vote_result
+        }
+
+        rows: list[dict] = []
+        for p in politicians:
+            total_v, absent_v = votes_by_id.get(p.id, (0, 0))
+            presence_rate = (
+                round((total_v - absent_v) / total_v * 100, 1) if total_v > 0 else 0.0
+            )
+            rows.append(
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "role": p.role,
+                    "source": p.source,
+                    "party": p.party.abbreviation if p.party else None,
+                    "uf": p.uf,
+                    "municipality": p.municipality,
+                    "photo_url": p.photo_url,
+                    "legislature": p.legislature,
+                    "total_expenses": expenses_by_id.get(p.id, 0),
+                    "proposition_count": propositions_by_id.get(p.id, 0),
+                    "total_votes": total_v,
+                    "presence_rate": presence_rate,
+                }
+            )
+
+        return rows, total
 
     async def update_by_external_id(
         self, external_id: int, data: dict, *, source: str = "camara"

@@ -1,6 +1,6 @@
 import useSWR from "swr"
 import { api } from "./api"
-import type { AmendmentSummary, CardExpenseSummary, CompareResponse, GlobalExpenseSummary, NewsResponse, PaginatedAmendments, PaginatedCardExpenses, PaginatedResponse, PoliticianListItem, Politician, ExpenseSummary, Party, PresenceStats, Proposition, SenatorDetail, Vote } from "@/types"
+import type { AmendmentSummary, CardExpenseSummary, CompareResponse, GlobalExpenseSummary, NewsResponse, PaginatedAmendments, PaginatedCardExpenses, PaginatedResponse, PoliticianListItem, PoliticianWithMetrics, Politician, ExpenseSummary, Party, PresenceStats, Proposition, SenatorDetail, Vote } from "@/types"
 
 // ─── Politicians ──────────────────────────────────────────────────────────────
 
@@ -18,6 +18,22 @@ export function usePoliticians(params: UsePoliticiansParams) {
   const key = ["politicians", params]
   return useSWR<PaginatedResponse<PoliticianListItem>>(key, () =>
     api.politicians.list(params)
+  )
+}
+
+interface UsePoliticiansWithMetricsParams {
+  name?: string
+  party?: string
+  uf?: string
+  role?: string
+  page?: number
+  page_size?: number
+}
+
+export function usePoliticiansWithMetrics(params: UsePoliticiansWithMetricsParams) {
+  const key = ["politicians-with-metrics", params]
+  return useSWR<PaginatedResponse<PoliticianWithMetrics>>(key, () =>
+    api.politicians.listWithMetrics(params)
   )
 }
 

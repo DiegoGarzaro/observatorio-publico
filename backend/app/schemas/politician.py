@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -76,6 +78,38 @@ class PaginatedPoliticians(BaseModel):
     """
 
     items: list[PoliticianListItem]
+    total: int
+    page: int
+    page_size: int
+
+
+class PoliticianWithMetrics(PoliticianListItem):
+    """Politician list item enriched with mandate-period aggregate metrics.
+
+    Attributes:
+        total_expenses (Decimal): Grand total of CEAP expenses.
+        proposition_count (int): Total propositions authored.
+        presence_rate (float): Presence rate as a percentage (0–100).
+        total_votes (int): Total votes recorded.
+    """
+
+    total_expenses: Decimal = Decimal("0")
+    proposition_count: int = 0
+    presence_rate: float = 0.0
+    total_votes: int = 0
+
+
+class PaginatedPoliticiansWithMetrics(BaseModel):
+    """Paginated list of politicians enriched with metrics.
+
+    Attributes:
+        items (list[PoliticianWithMetrics]): Page items.
+        total (int): Total matching records.
+        page (int): Current page.
+        page_size (int): Items per page.
+    """
+
+    items: list[PoliticianWithMetrics]
     total: int
     page: int
     page_size: int

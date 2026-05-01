@@ -1,6 +1,12 @@
 from app.exceptions import PoliticianNotFoundError
 from app.repositories.politician_repository import PoliticianRepository
-from app.schemas.politician import PaginatedPoliticians, PoliticianListItem, PoliticianResponse
+from app.schemas.politician import (
+    PaginatedPoliticians,
+    PaginatedPoliticiansWithMetrics,
+    PoliticianListItem,
+    PoliticianResponse,
+    PoliticianWithMetrics,
+)
 
 
 class PoliticianService:
@@ -48,6 +54,44 @@ class PoliticianService:
         )
         return PaginatedPoliticians(
             items=[PoliticianListItem.from_orm_with_party(p) for p in politicians],
+            total=total,
+            page=page,
+            page_size=page_size,
+        )
+
+    async def list_with_metrics(
+        self,
+        *,
+        name: str | None = None,
+        party: str | None = None,
+        uf: str | None = None,
+        role: str | None = None,
+        page: int = 1,
+        page_size: int = 20,
+    ) -> PaginatedPoliticiansWithMetrics:
+        """Return a paginated list of politicians enriched with aggregate metrics.
+
+        Args:
+            name (str | None): Partial name search.
+            party (str | None): Party abbreviation.
+            uf (str | None): State abbreviation.
+            role (str | None): Role type (e.g. deputado_federal, senador).
+            page (int): Page number.
+            page_size (int): Items per page.
+
+        Returns:
+            PaginatedPoliticiansWithMetrics: Paginated result with metrics.
+        """
+        rows, total = await self._repository.list_with_metrics(
+            name=name,
+            party=party,
+            uf=uf,
+            role=role,
+            page=page,
+            page_size=page_size,
+        )
+        return PaginatedPoliticiansWithMetrics(
+            items=[PoliticianWithMetrics(**row) for row in rows],
             total=total,
             page=page,
             page_size=page_size,

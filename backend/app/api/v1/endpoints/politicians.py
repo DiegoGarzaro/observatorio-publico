@@ -11,7 +11,11 @@ from app.repositories.expense_repository import ExpenseRepository
 from app.repositories.politician_repository import PoliticianRepository
 from app.schemas.expense import ExpenseSummary, PaginatedExpenses
 from app.schemas.news import NewsResponse
-from app.schemas.politician import PaginatedPoliticians, PoliticianResponse
+from app.schemas.politician import (
+    PaginatedPoliticians,
+    PaginatedPoliticiansWithMetrics,
+    PoliticianResponse,
+)
 from app.schemas.senator import SenatorDetailResponse
 from app.services.expense_service import ExpenseService
 from app.services.news_service import NewsService
@@ -65,6 +69,36 @@ async def list_politicians(
         uf=uf,
         municipality=municipality,
         legislature=legislature,
+        role=role,
+        page=page,
+        page_size=page_size,
+    )
+
+
+@router.get(
+    "/with-metrics",
+    response_model=PaginatedPoliticiansWithMetrics,
+    summary="List politicians enriched with mandate aggregate metrics",
+    description=(
+        "Returns paginated politicians together with total expenses, "
+        "proposition count, total votes and presence rate. Designed for "
+        "election guides and comparison views — avoids N+1 calls per "
+        "politician on the client side."
+    ),
+)
+async def list_politicians_with_metrics(
+    name: str | None = Query(None, description="Partial name search"),
+    party: str | None = Query(None, description="Party abbreviation (e.g. PT)"),
+    uf: str | None = Query(None, description="State abbreviation (e.g. SP)"),
+    role: str | None = Query(None, description="Role type (deputado_federal, senador)"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    service: PoliticianService = Depends(_politician_service),
+) -> PaginatedPoliticiansWithMetrics:
+    return await service.list_with_metrics(
+        name=name,
+        party=party,
+        uf=uf,
         role=role,
         page=page,
         page_size=page_size,
